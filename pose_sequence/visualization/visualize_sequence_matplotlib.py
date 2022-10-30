@@ -1,0 +1,116 @@
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.pyplot import savefig
+from matplotlib.colors import to_rgb
+import os
+import numpy as np
+import imageio
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def is_right(joint_name):
+    if joint_name.lower().startswith('r'):
+        return True
+    else:
+        return False
+
+
+def get_rgba_color(color_name, alpha):
+    r, g, b = to_rgb(color_name)
+    return (r, g, b, float(alpha))
+
+
+def visualize_sequence_matplotlib(
+        sequence, video_name, tempdir='./temp',
+        padding=[10, 10, 10], joint_colors=None,
+        save_frames=False, dims=[0, 1], axes=False):
+    dim0= dims[0]
+    dim1 = dims[1]
+    # compute min and max bounds
+    mins = sequence.get_min_bound()
+    maxs = sequence.get_max_bound()
+    logger.debug(f"minimums: {mins}")
+    logger.debug(f"maximums: {maxs}")
+    xmin = int(mins[dim0] - padding[dim0])
+    xmax = int(maxs[dim0] + padding[dim0])
+    ymin = int(mins[dim1] - padding[dim1])
+    ymax = int(maxs[dim1] + padding[dim1])
+    images = []
+    fps = sequence.fps
+    logger.debug(f"fps: {fps}")
+
+    all_joint_locs = sequence.get_joint_locations()
+    all_joint_confs = sequence.get_joint_data()
+
+    # write individual images to temporary directory
+    os.makedirs(tempdir, exist_ok=True)
+    for i in range(sequence.num_frames):
+        joint_locs = all_joint_locs[i]
+        joint_confs = all_joint_confs[i]
+        p = plt.figure(figsize=(4, 6))
+        ax = p.add_axes([0, 0, 1, 1])
+        ax.set(xlim=(xmin, xmax), ylim=(ymin, ymax))
+        ax.set_aspect('equal')
+        ax.invert_yaxis()
+        ax.set_axis_off()
+
+        if axes:
+            ax.axhline(0, color='grey')
+            ax.axvline(0, color="grey")
+        logger.debug(f"joint confs: {joint_confs}")
+        if joint_colors is None:
+            frame_colors = ["red" if is_right(name) else "blue" for name in sequence.joint_names]
+        else:
+            frame_colors = joint_colors[i]
+        pose_info = zip(sequence.joint_names, joint_locs, joint_confs, frame_colors)
+        to_graph = []
+        skip_joints = []
+        if min_conf is None:
+            min_conf = 0
+        
+        for name, loc, conf, color in pose_info:
+            if not conf >= min_conf:
+                logger.debug(f"Skipping joint {name} with conf {conf}")
+                skip_joints.append(name)
+                continue
+            color = get_rgba_color(color, conf)
+            to_graph.append([loc[dim0], loc[dim1], color])
+        if len(to_graph) == 0:
+            logger.warn("No joints in this frame above threshold:"
+                        " writing blank frame")
+        else:
+            to_graph = np.array(to_graph, dtype=object)
+            ax.scatter(to_graph[:, 0], to_graph[:, 1], color=to_graph[:, 2])
+
+            for conn in sequence.connections:
+                if conn[0] in skip_joints or conn[1] in skip_joints:
+                    continue
+                line = [sequence.location_by_name(name)[i] for name in conn]
+                color = "red" if is_right(conn[0]) and is_right(conn[1])\
+                        else "blue"
+                line = Line2D([p[0] for p in line], [p[1] for p in line],
+                              color=color)
+                ax.add_line(line)
+
+        x = 10
+        y = 10
+        ax.text(x, y, f"walk_id: {sequence.walk_id}", transform=None)
+        img = os.path.join(tempdir, str(i) + ".png")
+        logger.debug(f"writing {i}th frame to {img}")
+        savefig(img)
+        plt.close()
+        images.append(img)
+
+    # create video from images
+    writer = imageio.get_writer(video_name, fps=fps)
+    for im in images:
+        writer.append_data(imageio.imread(im))
+        # remove temporary image file from disk
+        if not save_frames:
+            os.remove(im)
+    writer.close()
+    logger.info(f"wrote video to {video_name}")
+
+    return video_name
