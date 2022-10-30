@@ -26,8 +26,8 @@ class PoseSequence:
             joint_info (np.array, optional): a FxJx(D+M) array,
                 where F is the number of frames, J is the number of joints,
                 and D is the number of dimensions of each joint, and M is the length of optional
-                additional per-joint information such as a confidence score or ground contacts.
-                Can be None if pose_func supplied for lazy loading.
+                additional per-joint information such as a confidence score or ground contacts
+                (called "joint data"). Can be None if pose_func supplied for lazy loading.
             dims (int): Number of location dimensions in the pose sequence. Defaults to 2, but 3
                 is also a valid value.
             metadata (dict, optional): Dictionary from string keys to string values 
@@ -62,7 +62,7 @@ class PoseSequence:
         self.num_frames = self.joint_info.shape[0]
         self.__check_valid_seq()
 
-    def get_joint_location(self, joint_name):
+    def location_by_name(self, joint_name):
         """Get the location of a joint by name for all frames of the sequence.
 
         Args:
@@ -74,9 +74,9 @@ class PoseSequence:
         """        
         index = self.joint_names.index(joint_name)
         return self.joint_info[:, index, :self.dims]
-
-    def get_joint_info(self, joint_name):
-        """Get the location of a joint by name for all frames of the sequence.
+    
+    def data_by_name(self, joint_name):
+        """Get the data of a joint by name for all frames of the sequence.
 
         Args:
             joint_name (string): Name of the joint
@@ -87,6 +87,41 @@ class PoseSequence:
         """        
         index = self.joint_names.index(joint_name)
         return self.joint_info[:, index, self.dims:]
+    
+    def get_joint_locations(self):
+        """Get just the locations of each joint (ignore additional joint data)
+        
+        Returns:
+            np.array: an FxJxD numpy array representing the locaiton of
+                each joint in each frame """
+        return self.joint_info[:, :, :self.dims]
+
+    def set_joint_locations(self, joint_locations):
+        """Set just the locations of each joint, leaving additional joint data as is
+
+        Args:
+            joint_locations (np.array): an FxJxD array representing the locaiton of
+                each joint in each frame
+        """
+        self.joint_info[:, :, :self.dims] = joint_locations
+    
+    def get_joint_data(self):
+        """Get only the additional joint data for each joint in each frame
+
+        Returns:
+            np.array: an FxJxM array representing the additional data of
+                each joint in each frame
+        """
+        return self.joint_info[:, :, self.dims:]
+
+    def set_joint_data(self, joint_data):
+        """Set only the additional joint data, leaving locations the same
+
+        Args:
+            joint_data (np.array): an FxJxM array representing the additional data of
+                each joint in each frame
+        """
+        self.joint_info[:, :, self.dims:] = joint_data
 
     def filter_joints(self, exclude):
         """Return a new PoseSequence with specified joints excluded

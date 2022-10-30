@@ -20,13 +20,13 @@ def pose_seq():
     return PoseSequence(walk_id, seq_id, fps, joint_names, connections,
                         joint_info=joint_info)
 
-def test_get_joint_location(pose_seq):
-    lankle_locs = pose_seq.get_joint_location("LAnkle")
+def test_location_by_name(pose_seq):
+    lankle_locs = pose_seq.location_by_name("LAnkle")
     expected = np.array([[0.1, 0.3], [0.0, 0.2]])
     assert (lankle_locs == expected).all()
 
-def test_get_joint_info(pose_seq):
-    lankle_locs = pose_seq.get_joint_info("LAnkle")
+def test_data_by_name(pose_seq):
+    lankle_locs = pose_seq.data_by_name("LAnkle")
     expected = np.array([[0.5], [0.2]])
     assert (lankle_locs == expected).all()
 
@@ -38,16 +38,16 @@ def test_filter_joints(pose_seq):
 def test_shift(pose_seq):
     pose_seq.shift([1., 1.])
     expected_lankle_loc = np.array([[1.1, 1.3], [1.0, 1.2]])
-    assert (pose_seq.get_joint_location("LAnkle") == expected_lankle_loc).all()
-    lankle_confs = pose_seq.get_joint_info("LAnkle")
+    assert (pose_seq.location_by_name("LAnkle") == expected_lankle_loc).all()
+    lankle_confs = pose_seq.data_by_name("LAnkle")
     expected_lankle_conf = np.array([[0.5], [0.2]])
     assert (lankle_confs == expected_lankle_conf).all()
 
 def test_scale(pose_seq):
     pose_seq.scale([2., 2.])
     expected_lankle_loc = np.array([[0.2, 0.6], [0.0, 0.4]])
-    assert (pose_seq.get_joint_location("LAnkle") == expected_lankle_loc).all()
-    lankle_confs = pose_seq.get_joint_info("LAnkle")
+    assert (pose_seq.location_by_name("LAnkle") == expected_lankle_loc).all()
+    lankle_confs = pose_seq.data_by_name("LAnkle")
     expected_lankle_conf = np.array([[0.5], [0.2]])
     assert (lankle_confs == expected_lankle_conf).all()
 
