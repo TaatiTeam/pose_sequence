@@ -5,36 +5,42 @@ import os
 
 logger = logging.getLogger(__name__)
 
+
 class PoseSequence:
 
     def __init__(self, action_id, seq_id, fps, joint_names, connections,
                  dims=2, joint_info=None, metadata=None, pose_func=None):
         """A sequence of poses, such as those extracted from consecutive
-        frames of a video. Has the option to initialize with empty joint locations
-        and confidences and pass in a function to load them at access time,
-        for efficient lazy loading of datasets.
+        frames of a video. Has the option to initialize with empty joint
+        locations and confidences and pass in a function to load them at
+        access time, for efficient lazy loading of datasets.
 
         Args:
-            action_id (String): an id string for the source action bout that is being represented
-                by the sequence. For example, an id for the orignal video.
-            seq_id (String): an id string for the sequence. There can be multiple
-                sequences per source action, from different cameras or pose estimators.
+            action_id (String): an id string for the source action bout that
+                is being represented by the sequence. For example, an id for
+                the orignal video.
+            seq_id (String): an id string for the sequence. There can be
+                multiple sequences per source action, from different cameras
+                or pose estimators.
             fps (int): the number of frames/poses per second
-            joint_names (list of string): A list of names for the J joints, in the same order
-                as joint_locs
-            connections (list of tuple of string): A list of joint name pairs signifying connected joints
+            joint_names (list of string): A list of names for the J joints,
+                in the same order as joint_locs
+            connections (list of tuple of string): A list of joint name pairs
+                signifying connected joints
             joint_info (np.array, optional): a FxJx(D+M) array,
                 where F is the number of frames, J is the number of joints,
-                and D is the number of dimensions of each joint, and M is the length of optional
-                additional per-joint information such as a confidence score or ground contacts
-                (called "joint data"). Can be None if pose_func supplied for lazy loading.
-            dims (int): Number of location dimensions in the pose sequence. Defaults to 2, but 3
-                is also a valid value.
-            metadata (dict, optional): Dictionary from string keys to string values
-                representing additional metadata, such as camera id, direction of walk.
-                Defaults to None.
+                and D is the number of dimensions of each joint, and M is the
+                length of optional additional per-joint information such as a
+                confidence score or ground contacts called "joint data").
+                Can be None if pose_func supplied for lazy loading.
+            dims (int): Number of location dimensions in the pose sequence.
+                Defaults to 2, but 3 is also a valid value.
+            metadata (dict, optional): Dictionary from string keys to string
+                values representing additional metadata, such as camera id,
+                direction of walk. Defaults to None.
             pose_func(() -> np.array): A zero argument function that returns
-                joint_info as described above, for lazy loading. Default is None.
+                joint_info as described above, for lazy loading.
+                Default is None.
         """
         self.walk_id = action_id
         self.seq_id = seq_id
@@ -55,8 +61,9 @@ class PoseSequence:
         Args:
             joint_info (np.array): a FxJx(D+M) array,
                 where F is the number of frames, J is the number of joints,
-                and D is the number of dimensions of each joint, and M is the length of optional
-                additional per-joint information such as a confidence score or ground contacts.
+                and D is the number of dimensions of each joint, and M is the
+                length of optional additional per-joint information such as a
+                confidence score or ground contacts.
         """
         self.joint_info = joint_info
         self.num_frames = self.joint_info.shape[0]
@@ -82,8 +89,9 @@ class PoseSequence:
             joint_name (string): Name of the joint
 
         Returns:
-            np.array: A FxM numpy array containing the extra information about the joint
-                over F frames, where M is the number of extra pieces of information.
+            np.array: A FxM numpy array containing the extra information about
+                the joint over F frames, where M is the number of extra pieces
+                of information.
         """
         index = self.joint_names.index(joint_name)
         return self.joint_info[:, index, self.dims:]
@@ -97,11 +105,12 @@ class PoseSequence:
         return self.joint_info[:, :, :self.dims]
 
     def set_joint_locations(self, joint_locations):
-        """Set just the locations of each joint, leaving additional joint data as is
+        """Set just the locations of each joint, leaving additional joint
+        data as is
 
         Args:
-            joint_locations (np.array): an FxJxD array representing the locaiton of
-                each joint in each frame
+            joint_locations (np.array): an FxJxD array representing the
+            location of each joint in each frame
         """
         self.joint_info[:, :, :self.dims] = joint_locations
 
@@ -118,8 +127,8 @@ class PoseSequence:
         """Set only the additional joint data, leaving locations the same
 
         Args:
-            joint_data (np.array): an FxJxM array representing the additional data of
-                each joint in each frame
+            joint_data (np.array): an FxJxM array representing the additional
+                data of each joint in each frame
         """
         self.joint_info[:, :, self.dims:] = joint_data
 
@@ -138,8 +147,8 @@ class PoseSequence:
         indices.sort()
         joint_names = [j for j in self.joint_names if j not in exclude]
         joint_info = np.delete(self.joint_info, indices, axis=1)
-        connections = ((a, b) for a, b in self.connections\
-                        if a in joint_names and b in joint_names)
+        connections = ((a, b) for a, b in self.connections
+                       if a in joint_names and b in joint_names)
         return PoseSequence(self.walk_id, self.seq_id, self.fps,
                             joint_names, connections,
                             joint_info=joint_info,
@@ -150,7 +159,8 @@ class PoseSequence:
         over the full pose sequence.
 
         Returns:
-            np.array: A numpy array containing the minimum values in each dimension.
+            np.array: A numpy array containing the minimum values in each
+                dimension.
         """
         joint_locs = self.joint_info[:, :, :self.dims]
         return self.__get_bound(joint_locs, np.nanmin)
@@ -160,7 +170,8 @@ class PoseSequence:
         over the full pose sequence.
 
         Returns:
-            np.array: A numpy array containing the maximum values in each dimension.
+            np.array: A numpy array containing the maximum values in each
+                dimension.
         """
         joint_locs = self.joint_info[:, :, :self.dims]
         return self.__get_bound(joint_locs, np.nanmax)
@@ -188,11 +199,13 @@ class PoseSequence:
     def shift(self, vector):
         """Shift all joints in the pose in the direction specified by vector.
         Vector must have same dims as joints. Operates in-place."""
-        self.joint_info[:, :, :self.dims] = self.joint_info[:, :, :self.dims] + np.array(vector)
+        self.joint_info[:, :, :self.dims] = (self.joint_info[:, :, :self.dims]
+                                             + np.array(vector))
 
     def scale(self, scalar):
         """Scale all joint locations by scalar. Operates in-place."""
-        self.joint_info[:, :, :self.dims] = self.joint_info[:, :, :self.dims] * scalar
+        self.joint_info[:, :, :self.dims] = (self.joint_info[:, :, :self.dims]
+                                             * scalar)
 
     def to_file(self, dirname):
         """Write this pose sequence to files in the specified directory.
@@ -200,8 +213,10 @@ class PoseSequence:
         one metadata file, one joint locations file, and one joint confs file.
 
         Args:
-            dirname (string): The directory in which to store the pose sequence.
-            If it is not empty, some files may be overwritten if there is a naming clash.
+            dirname (string): The directory in which to store the pose
+                sequence.
+            If it is not empty, some files may be overwritten if there is a
+                naming clash.
         """
         os.makedirs(dirname, exist_ok=True)
         metadata_file = os.path.join(dirname, "meta.toml")
@@ -217,7 +232,8 @@ class PoseSequence:
 
         joint_info_file = os.path.join(dirname, "joint_info.npy")
         np.save(joint_info_file, self.joint_info)
-        logger.debug(f"Wrote pose seq {self.walk_id} {self.seq_id} to {dirname}")
+        logger.debug(f"Wrote pose seq {self.walk_id} {self.seq_id}"
+                     f" to {dirname}")
 
     @staticmethod
     def from_file(dirname):
@@ -245,8 +261,8 @@ class PoseSequence:
         joint_info = np.load(joint_info_file)
 
         return PoseSequence(walk_id, seq_id, fps, joint_names, connections,
-                                dims=dims, joint_info=joint_info,
-                                metadata=metadata)
+                            dims=dims, joint_info=joint_info,
+                            metadata=metadata)
 
     def __getattr__(self, name):
         """Overwriting the function called when default attribute access fails.
@@ -261,7 +277,8 @@ class PoseSequence:
             loading the poses.
 
         Raises:
-            ValueError if it tries to load the poses and self.pose_func is None.
+            ValueError if it tries to load the poses and self.pose_func
+                is None.
             AttributeError if the attribute is not found in the class
         """
         lazy_attrs = ['joint_info', 'num_frames']
@@ -287,5 +304,6 @@ class PoseSequence:
             ValueError: if the pose sequence is not valid
         """
         if self.joint_info.shape[1] != len(self.joint_names):
-            raise ValueError(f"Number of joint locations ({self.joint_info.shape[1]})"\
-            f" must equal number of joint names({len(self.joint_names)})")
+            raise ValueError(
+                f"Number of joint locations ({self.joint_info.shape[1]})"
+                f" must equal number of joint names({len(self.joint_names)})")
