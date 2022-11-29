@@ -1,4 +1,4 @@
-from pose2gait.utils.rotate_3d_seq import angle_between_two_vectors, rotate_point_around_origin
+from pose_sequence.utils.rotate_3d_seq import angle_between_two_vectors, rotate_point_around_origin
 import pytest
 
 
