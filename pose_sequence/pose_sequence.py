@@ -277,7 +277,7 @@ class PoseSequence:
         """
         if self.pose_func() is None:
             raise ValueError("No function provided for lazy loading of poses")
-        self.set_joint_info(*self.pose_func())
+        self.set_joint_info(self.pose_func())
 
     def __check_valid_seq(self):
         """ Check that the sequence is valid, in that the joint information
