@@ -6,7 +6,7 @@ import os
 logger = logging.getLogger(__name__)
 
 class PoseSequence:
-    
+
     def __init__(self, action_id, seq_id, fps, joint_names, connections,
                  dims=2, joint_info=None, metadata=None, pose_func=None):
         """A sequence of poses, such as those extracted from consecutive
@@ -30,7 +30,7 @@ class PoseSequence:
                 (called "joint data"). Can be None if pose_func supplied for lazy loading.
             dims (int): Number of location dimensions in the pose sequence. Defaults to 2, but 3
                 is also a valid value.
-            metadata (dict, optional): Dictionary from string keys to string values 
+            metadata (dict, optional): Dictionary from string keys to string values
                 representing additional metadata, such as camera id, direction of walk.
                 Defaults to None.
             pose_func(() -> np.array): A zero argument function that returns
@@ -70,11 +70,11 @@ class PoseSequence:
 
         Returns:
             np.array: A FxD numpy array containing the location of the joint
-                over F frames, where D is the number of dimensions. 
-        """        
+                over F frames, where D is the number of dimensions.
+        """
         index = self.joint_names.index(joint_name)
         return self.joint_info[:, index, :self.dims]
-    
+
     def data_by_name(self, joint_name):
         """Get the data of a joint by name for all frames of the sequence.
 
@@ -84,13 +84,13 @@ class PoseSequence:
         Returns:
             np.array: A FxM numpy array containing the extra information about the joint
                 over F frames, where M is the number of extra pieces of information.
-        """        
+        """
         index = self.joint_names.index(joint_name)
         return self.joint_info[:, index, self.dims:]
-    
+
     def get_joint_locations(self):
         """Get just the locations of each joint (ignore additional joint data)
-        
+
         Returns:
             np.array: an FxJxD numpy array representing the locaiton of
                 each joint in each frame """
@@ -104,7 +104,7 @@ class PoseSequence:
                 each joint in each frame
         """
         self.joint_info[:, :, :self.dims] = joint_locations
-    
+
     def get_joint_data(self):
         """Get only the additional joint data for each joint in each frame
 
@@ -128,7 +128,7 @@ class PoseSequence:
 
         Args:
             exclude (list of string): names of joints to remove
-        
+
         Returns: a new PoseSequence with specified joints excluded
         """
         indices = []
@@ -140,13 +140,13 @@ class PoseSequence:
         joint_info = np.delete(self.joint_info, indices, axis=1)
         connections = ((a, b) for a, b in self.connections\
                         if a in joint_names and b in joint_names)
-        return PoseSequence(self.walk_id, self.seq_id, self.fps, 
+        return PoseSequence(self.walk_id, self.seq_id, self.fps,
                             joint_names, connections,
                             joint_info=joint_info,
                             metadata=self.metadata)
 
     def get_min_bound(self):
-        """Get the minimum values for joint locations in each dimension 
+        """Get the minimum values for joint locations in each dimension
         over the full pose sequence.
 
         Returns:
@@ -156,7 +156,7 @@ class PoseSequence:
         return self.__get_bound(joint_locs, np.nanmin)
 
     def get_max_bound(self):
-        """Get the maximum values for joint locations in each dimension 
+        """Get the maximum values for joint locations in each dimension
         over the full pose sequence.
 
         Returns:
@@ -214,14 +214,14 @@ class PoseSequence:
         metadata['dims'] = self.dims
         with open(metadata_file, 'w') as f:
             toml.dump(metadata, f)
-        
+
         joint_info_file = os.path.join(dirname, "joint_info.npy")
         np.save(joint_info_file, self.joint_info)
         logger.debug(f"Wrote pose seq {self.walk_id} {self.seq_id} to {dirname}")
 
     @staticmethod
     def from_file(dirname):
-        """Static method to read a pose sequence from the specified directory. 
+        """Static method to read a pose sequence from the specified directory.
         Assumes that the pose sequence was written using PoseSequence.to_file()
         with the same directory name.
 
@@ -240,7 +240,7 @@ class PoseSequence:
             joint_names = metadata.pop('joint_names')
             connections = metadata.pop('connections')
             dims = metadata.pop('dims')
-        
+
         joint_info_file = os.path.join(dirname, "joint_info.npy")
         joint_info = np.load(joint_info_file)
 
@@ -249,7 +249,7 @@ class PoseSequence:
                                 metadata=metadata)
 
     def __getattr__(self, name):
-        """Overwriting the function called when default attribute access fails. 
+        """Overwriting the function called when default attribute access fails.
         If the attribute is joint_locs, joint_confs, num_frames, or dims,
         load and store poses the joint locations and confidences,
         then return the attribute. This allows lazy loading at the time the
@@ -259,8 +259,8 @@ class PoseSequence:
         Returns:
             The attribute value for attribute with name name, after potentially
             loading the poses.
-        
-        Raises: 
+
+        Raises:
             ValueError if it tries to load the poses and self.pose_func is None.
             AttributeError if the attribute is not found in the class
         """
