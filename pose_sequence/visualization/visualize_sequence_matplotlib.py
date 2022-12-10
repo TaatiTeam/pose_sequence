@@ -25,12 +25,30 @@ def get_rgba_color(color_name, alpha):
 def visualize_sequence_matplotlib(
         sequence, video_name, tempdir='./temp',
         padding=[10, 10, 10], joint_colors=None,
-        save_frames=False, dims=[0, 1], axes=False):
+        save_frames=False, dims=[0, 1], axes=False,
+        exclude_joints=None):
+    """_summary_
+
+    Args:
+        sequence (_type_): _description_
+        video_name (_type_): _description_
+        tempdir (str, optional): _description_. Defaults to './temp'.
+        padding (list, optional): _description_. Defaults to [10, 10, 10].
+        joint_colors (_type_, optional): _description_. Defaults to None.
+        save_frames (bool, optional): _description_. Defaults to False.
+        dims (list, optional): _description_. Defaults to [0, 1].
+        axes (bool, optional): _description_. Defaults to False.
+        exclude_joints ((np.array) -> bool, optional):
+            A function that takes in the joint data
+            and returns true if the joint should be excluded from
+            visualization and false otherwise. Defaults to None,
+            which includes all joints.
+
+    Returns:
+        _type_: _description_
+    """
     dim0 = dims[0]
     dim1 = dims[1]
-    min_conf = None  # pose_sequence no longer assumes confidence scores
-    # TODO: allow user to pass in inclusion function that runs on joint data
-    #       and returns true/false for each joint
 
     # compute min and max bounds
     mins = sequence.get_min_bound()
@@ -46,13 +64,13 @@ def visualize_sequence_matplotlib(
     logger.debug(f"fps: {fps}")
 
     all_joint_locs = sequence.get_joint_locations()
-    all_joint_confs = sequence.get_joint_data()
+    all_joint_data = sequence.get_joint_data()
 
     # write individual images to temporary directory
     os.makedirs(tempdir, exist_ok=True)
     for i in range(sequence.num_frames):
         joint_locs = all_joint_locs[i]
-        joint_confs = all_joint_confs[i]
+        joint_data = all_joint_data[i]
         p = plt.figure(figsize=(4, 6))
         ax = p.add_axes([0, 0, 1, 1])
         ax.set(xlim=(xmin, xmax), ylim=(ymin, ymax))
@@ -63,22 +81,19 @@ def visualize_sequence_matplotlib(
         if axes:
             ax.axhline(0, color='grey')
             ax.axvline(0, color="grey")
-        logger.debug(f"joint confs: {joint_confs}")
         if joint_colors is None:
             frame_colors = ["red" if is_right(name) else "blue"
                             for name in sequence.joint_names]
         else:
             frame_colors = joint_colors[i]
         pose_info = zip(sequence.joint_names, joint_locs,
-                        joint_confs, frame_colors)
+                        joint_data, frame_colors)
         to_graph = []
         skip_joints = []
-        if min_conf is None:
-            min_conf = 0
 
-        for name, loc, conf, color in pose_info:
-            if not conf >= min_conf:
-                logger.debug(f"Skipping joint {name} with conf {conf}")
+        for name, loc, data, color in pose_info:
+            if exclude_joints is not None and exclude_joints(data):
+                logger.debug(f"Skipping joint {name} with data {data}")
                 skip_joints.append(name)
                 continue
             color = get_rgba_color(color, conf)
