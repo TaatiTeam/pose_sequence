@@ -1,0 +1,47 @@
+
+TODO:
+allow limiting of min bound by confidence score or other criteria (and test)
+joint_locs = self.joint_info[:self.dims]
+        if min_conf is not None:
+            mask = self.joint_confs < min_conf
+            mask = np.expand_dims(mask, axis=2)
+            mask = np.concatenate((mask,) * self.dims, axis=2)
+            joint_locs[mask] = np.nanmax(joint_locs)
+        return self.__get_bound(joint_locs, np.nanmin)
+
+TODO elsewhere:
+ - check and clip joint confidences
+
+        # check all joint confs are between 0 and 1, and clip if not
+        if np.max(self.joint_confs) >= 1.0 or np.min(self.joint_confs) <= 0.0:
+            logger.debug(f"Joint confidence greater than 1.0 or less than 0.0: {self.joint_confs}")
+            self.joint_confs = np.clip(self.joint_confs, 0, 1)
+
+ - convert python lists to numpy arrays with specific nan values 
+
+     def __numpy_float_converter(self, arr, dims=1, nan_vals=['']):
+        ''' Takes in nested python lists, replaces specified values with NaNs,
+        and returns a numpy array of dtype float32.
+
+        Args:
+            arr (list): an array represented as nested python lists
+            dims (int): number of dimensions in the array
+                Valid values are 1 and 2, with default=1
+            nan_vals (list): values that should be replaced with NaN.
+                Default is empty string only'''
+        if type(arr) is np.array:
+            return arr
+        if dims == 1:
+            arr = ['NaN' if e in nan_vals else e for e in arr]
+        elif dims == 2:
+            for i, entry in enumerate(arr):
+                entry = ['NaN' if e in nan_vals else e for e in entry]
+                arr[i] = entry
+        elif dims == 3:
+            for i, row in enumerate(arr):
+                for j, col in enumerate(row):
+                    col = ['NaN' if e in nan_vals else e for e in col]
+                    arr[i][j] = col
+        else:
+            logger.warn("Only 1D and 2D arrays supported")
+        return np.array(arr, dtype=np.float32)
