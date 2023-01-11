@@ -38,7 +38,7 @@ def get_seq_rotation(
         float, list: The angle to rotate by, and the origin to rotate around
             in (rotate_dim, level_dim) space (e.g. (z, y) by default).
     """
-    joint_locs = pose_seq.get_joint_locations(joint_name)
+    joint_locs = pose_seq.location_by_name(joint_name)
     first = joint_locs[start]
     last = joint_locs[end]
     logger.debug(f"first={first}")
@@ -126,7 +126,7 @@ def rotate_pose_seq_around_origin(
             by dims.
     """
     dim0, dim1 = dims
-    joint_locs = pose_seq.joint_locations()
+    joint_locs = pose_seq.get_joint_locations()
     new_joint_locs = []
     for frame in joint_locs:
         new_frame = []
