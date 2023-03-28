@@ -31,7 +31,7 @@ def visualize_sequence_matplotlib(
 
     Args:
         sequence (_type_): _description_
-        video_name (_type_): _description_
+        video_name (str): name of output file to save video to
         tempdir (str, optional): _description_. Defaults to './temp'.
         padding (list, optional): _description_. Defaults to [10, 10, 10].
         joint_colors (_type_, optional): _description_. Defaults to None.
@@ -96,7 +96,7 @@ def visualize_sequence_matplotlib(
                 logger.debug(f"Skipping joint {name} with data {data}")
                 skip_joints.append(name)
                 continue
-            color = get_rgba_color(color, conf)
+            color = get_rgba_color(color, 1.0)
             to_graph.append([loc[dim0], loc[dim1], color])
         if len(to_graph) == 0:
             logger.warn("No joints in this frame above threshold:"
