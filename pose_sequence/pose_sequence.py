@@ -1,14 +1,15 @@
-import numpy as np
 import logging
-import toml
 import os
+
+import numpy as np
+import toml
 
 logger = logging.getLogger(__name__)
 
 
 class PoseSequence:
 
-    def __init__(self, action_id, seq_id, fps, joint_names, connections,
+    def __init__(self, walk_id, seq_id, fps, joint_names, connections,
                  dims=2, joint_info=None, metadata=None, pose_func=None):
         """A sequence of poses, such as those extracted from consecutive
         frames of a video. Has the option to initialize with empty joint
@@ -16,7 +17,7 @@ class PoseSequence:
         access time, for efficient lazy loading of datasets.
 
         Args:
-            action_id (String): an id string for the source action bout that
+            walk_id (String): an id string for the source walking bout that
                 is being represented by the sequence. For example, an id for
                 the orignal video.
             seq_id (String): an id string for the sequence. There can be
@@ -24,7 +25,8 @@ class PoseSequence:
                 or pose estimators.
             fps (int): the number of frames/poses per second
             joint_names (list of string): A list of names for the J joints,
-                in the same order as joint_locs
+                in the same order as joint_locs. Assumes joints starting with L
+                are left joints and R are right joints.
             connections (list of tuple of string): A list of joint name pairs
                 signifying connected joints
             joint_info (np.array, optional): a FxJx(D+M) array,
@@ -42,7 +44,7 @@ class PoseSequence:
                 joint_info as described above, for lazy loading.
                 Default is None.
         """
-        self.walk_id = action_id
+        self.walk_id = walk_id
         self.seq_id = seq_id
         self.fps = float(fps)
         self.joint_names = joint_names
