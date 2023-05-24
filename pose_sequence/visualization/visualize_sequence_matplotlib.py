@@ -1,11 +1,12 @@
+import logging
+import os
+
+import imageio
 import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.colors import to_rgb
 from matplotlib.lines import Line2D
 from matplotlib.pyplot import savefig
-from matplotlib.colors import to_rgb
-import os
-import numpy as np
-import imageio
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +97,7 @@ def visualize_sequence_matplotlib(
                 logger.debug(f"Skipping joint {name} with data {data}")
                 skip_joints.append(name)
                 continue
-            color = get_rgba_color(color, conf)
+            color = get_rgba_color(color, 1)
             to_graph.append([loc[dim0], loc[dim1], color])
         if len(to_graph) == 0:
             logger.warn("No joints in this frame above threshold:"
