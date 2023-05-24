@@ -15,8 +15,8 @@ def mirror_sequence(sequence):
     mirrored_seq.joint_info[:, :, 0] = sequence.joint_info[:, :, 0] * -1
     # switch left and right joints
     joints = [name[1:] for name in sequence.joint_names if name.startswith("L")]
-    left_joints = [sequence.joint_names.indexof("L" + joint) for joint in joints]
-    right_joints = [sequence.joint_names.indexof("R" + joint) for joint in joints]
+    left_joints = [sequence.joint_names.index("L" + joint) for joint in joints]
+    right_joints = [sequence.joint_names.index("R" + joint) for joint in joints]
     mirrored_seq.joint_info[:, left_joints + right_joints, :] = mirrored_seq.joint_info[:, right_joints + left_joints, :]
     mirrored_seq.seq_id = mirrored_seq.seq_id + "_mirrored"
     return mirrored_seq

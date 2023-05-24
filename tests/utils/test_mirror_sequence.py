@@ -1,10 +1,12 @@
+import numpy as np
 import pytest
+
 from pose_sequence import PoseSequence
 from pose_sequence.utils.mirror_sequence import mirror_sequence
-import numpy as np
+
 
 @pytest.fixture
-def pos_sequence():
+def mir_seq():
     walk_id = "dummy_walk"
     seq_id = "sequence_1"
     fps = 30
@@ -27,17 +29,19 @@ def test_location_by_name(mir_seq):
     expected_ankle = np.array([[0.4, 0.3], [0.2, 0.3]])
     relbow_locs = mir_seq.location_by_name("RElbow")
     expected_elbow = np.array([[-0.3, 0.5], [-0.2, 0.5]])
-    assert ((lankle_locs == expected_ankle).all() and (relbow_locs == expected_elbow).all())
+    assert (lankle_locs == expected_ankle).all()
+    assert (relbow_locs == expected_elbow).all()
 
 def test_data_by_name(mir_seq):
     rankle_locs = mir_seq.data_by_name("RAnkle")
     expected_ankle = np.array([[0.5], [0.2]])
     lelbow_locs = mir_seq.data_by_name("LElbow")
     expected_elbow = np.array([[0.3], [0.3]])
-    assert ((rankle_locs == expected_ankle).all() and (lelbow_locs == expected_elbow).all())
+    assert (rankle_locs == expected_ankle).all()
+    assert (lelbow_locs == expected_elbow).all()
 
 def test_seq_id(mir_seq):
-    assert (mir_seq == "sequence_1_mirrored")
+    assert (mir_seq.seq_id == "sequence_1_mirrored")
 
 def test_filter_joints(mir_seq):
     filtered = mir_seq.filter_joints(["LAnkle", "RElbow"])
