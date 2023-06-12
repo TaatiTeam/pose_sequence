@@ -24,9 +24,9 @@ def get_rgba_color(color_name, alpha):
 
 def visualize_sequence_matplotlib(
         sequence, video_name, tempdir='./temp',
-        padding=[10, 10, 10], joint_colors=None,
+        padding=[0, 0, 10], joint_colors=None,
         save_frames=False, dims=[0, 1], axes=False,
-        exclude_joints=None):
+        exclude_joints=None, res = [0, 0]):
     """_summary_
 
     Args:
@@ -51,8 +51,8 @@ def visualize_sequence_matplotlib(
     dim1 = dims[1]
 
     # compute min and max bounds
-    mins = sequence.get_min_bound()
-    maxs = sequence.get_max_bound()
+    mins = [0, 0]
+    maxs = [res[0], res[1]]
     logger.debug(f"minimums: {mins}")
     logger.debug(f"maximums: {maxs}")
     xmin = int(mins[dim0] - padding[dim0])
@@ -66,18 +66,20 @@ def visualize_sequence_matplotlib(
     all_joint_locs = sequence.get_joint_locations()
     all_joint_data = sequence.get_joint_data()
 
+    writer = imageio.get_writer(video_name, fps=fps, macro_block_size = 8)
     # write individual images to temporary directory
     os.makedirs(tempdir, exist_ok=True)
+    i = 0
+    p = plt.figure(figsize=((xmax - xmin) / 100, (ymax - ymin) / 100))
+    ax = p.add_axes([0, 0, 1, 1])
     for i in range(sequence.num_frames):
-        joint_locs = all_joint_locs[i]
-        joint_data = all_joint_data[i]
-        p = plt.figure(figsize=(4, 6))
-        ax = p.add_axes([0, 0, 1, 1])
         ax.set(xlim=(xmin, xmax), ylim=(ymin, ymax))
         ax.set_aspect('equal')
         ax.invert_yaxis()
         ax.set_axis_off()
-
+        joint_locs = all_joint_locs[i]
+        joint_data = all_joint_data[i]
+        
         if axes:
             ax.axhline(0, color='grey')
             ax.axvline(0, color="grey")
@@ -121,17 +123,13 @@ def visualize_sequence_matplotlib(
         img = os.path.join(tempdir, str(i) + ".png")
         logger.debug(f"writing {i}th frame to {img}")
         savefig(img)
-        plt.close()
         images.append(img)
-
-    # create video from images
-    writer = imageio.get_writer(video_name, fps=fps)
-    for im in images:
-        writer.append_data(imageio.imread(im))
-        # remove temporary image file from disk
-        if not save_frames:
-            os.remove(im)
+        writer.append_data(imageio.imread(img))
+        os.remove(img)
+        ax.clear()
+        
     writer.close()
+    
     logger.info(f"wrote video to {video_name}")
 
     return video_name
