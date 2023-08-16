@@ -4,7 +4,7 @@ from matplotlib.pyplot import savefig
 from matplotlib.colors import to_rgb
 import os
 import numpy as np
-import imageio
+import imageio.v2 as iio
 import logging
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ def visualize_sequence_matplotlib(
     all_joint_locs = sequence.get_joint_locations()
     all_joint_data = sequence.get_joint_data()
 
-    writer = imageio.get_writer(video_name, duration=duration, macro_block_size = 8)
+    writer = iio.get_writer(video_name, format="FFMPEG", mode = 'I', fps=sequence.fps, macro_block_size = 8)
     # write individual images to temporary directory
     os.makedirs(tempdir, exist_ok=True)
     i = 0
@@ -124,7 +124,7 @@ def visualize_sequence_matplotlib(
         logger.debug(f"writing {i}th frame to {img}")
         savefig(img)
         images.append(img)
-        writer.append_data(imageio.imread(img, format="png"))
+        writer.append_data(iio.imread(img))
         os.remove(img)
         ax.clear()
         
