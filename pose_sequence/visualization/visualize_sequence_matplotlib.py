@@ -60,13 +60,13 @@ def visualize_sequence_matplotlib(
     ymin = int(mins[dim1] - padding[dim1])
     ymax = int(maxs[dim1] + padding[dim1])
     images = []
-    fps = sequence.fps
-    logger.debug(f"fps: {fps}")
+    duration = 1000 / sequence.fps
+    logger.debug(f"fps: {sequence.fps}")
 
     all_joint_locs = sequence.get_joint_locations()
     all_joint_data = sequence.get_joint_data()
 
-    writer = imageio.get_writer(video_name, fps=fps, macro_block_size = 8)
+    writer = imageio.get_writer(video_name, duration=duration, macro_block_size = 8)
     # write individual images to temporary directory
     os.makedirs(tempdir, exist_ok=True)
     i = 0
@@ -124,7 +124,7 @@ def visualize_sequence_matplotlib(
         logger.debug(f"writing {i}th frame to {img}")
         savefig(img)
         images.append(img)
-        writer.append_data(imageio.imread(img))
+        writer.append_data(imageio.imread(img, format="png"))
         os.remove(img)
         ax.clear()
         
